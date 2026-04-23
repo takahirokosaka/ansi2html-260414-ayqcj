@@ -1,6 +1,6 @@
 use vte::{Parser, Perform};
 
-pub struct Printer;
+struct Printer;
 
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
