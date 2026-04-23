@@ -35,6 +35,7 @@ impl Perform for Printer {
 				[0x01] => println!("bold 0x01 (1)"),
 				[0x03] => println!("italic 0x03 (3)"),
 				[0x04] => println!("underline 0x04 (4)"),
+				[0x07] => println!("reverse 0x07 (7)"),
 				[0x26, _rest @ ..] => println!("color 0x26 (38)"),
 				[0x30, _rest @ ..] => println!("background 0x30 (48)"),
 				_ => {
