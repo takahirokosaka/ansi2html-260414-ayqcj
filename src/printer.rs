@@ -1,7 +1,7 @@
 mod ansi_to_css;
 
-use vte::{Parser, Perform};
 use ansi_to_css::sgr_params_to_css;
+use vte::{Parser, Perform};
 
 struct Printer;
 
@@ -30,7 +30,7 @@ impl Perform for Printer {
 			return;
 		}
 
-		sgr_params_to_css(params);
+		sgr_params_to_css(params.iter());
 	}
 }
 
