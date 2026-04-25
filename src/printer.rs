@@ -1,9 +1,19 @@
 mod ansi_to_css;
 
-use ansi_to_css::sgr_params_to_css;
+use ansi_to_css::Converter;
 use vte::{Parser, Perform};
 
-struct Printer;
+struct Printer {
+	converter: Converter,
+}
+
+impl Printer {
+	pub fn new() -> Self {
+		Self {
+			converter: Converter::new(),
+		}
+	}
+}
 
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
@@ -30,13 +40,13 @@ impl Perform for Printer {
 			return;
 		}
 
-		sgr_params_to_css(params.iter());
+		self.converter.sgr_params_to_css(params.iter());
 	}
 }
 
 pub fn ansi_to_html(input: &[u8]) -> String {
 	let mut parser = Parser::new();
-	let mut printer = Printer;
+	let mut printer = Printer::new();
 
 	for &byte in input {
 		parser.advance(&mut printer, byte);
