@@ -1,8 +1,44 @@
-pub(super) struct Converter {}
+#[derive(Clone, Copy, Debug)]
+enum Color {
+	Rgb(u8, u8, u8),
+	Ansi256(u8),
+	None,
+}
+
+#[derive(Debug)]
+struct Style {
+	fg: Color,
+	bg: Color,
+	bold: bool,
+	italic: bool,
+	underline: bool,
+	reverse: bool,
+}
+
+impl Default for Style {
+	fn default() -> Self {
+		Self {
+			fg: Color::None,
+			bg: Color::None,
+			bold: false,
+			italic: false,
+			underline: false,
+			reverse: false,
+		}
+	}
+}
+
+pub(super) struct Converter {
+	cur_style: Style,
+	open_span: bool,
+}
 
 impl Converter {
 	pub fn new() -> Self {
-		Self {}
+		Self {
+			cur_style: Style::default(),
+			open_span: false,
+		}
 	}
 
 	pub(super) fn sgr_params_to_css<'a>(
@@ -13,7 +49,11 @@ impl Converter {
 			println!("param bytes: {:02x?}", p);
 
 			match p {
-				[0x0000u16] => println!("reset 0x00 (0)"),
+				[0x0000u16] => {
+					println!("reset 0x00 (0)");
+
+					// Reset: close the current span (if any), and open a new span with the default style if the current span is not already the default.
+				}
 				[0x0001u16] => println!("bold 0x01 (1)"),
 				[0x0003u16] => println!("italic 0x03 (3)"),
 				[0x0004u16] => println!("underline 0x04 (4)"),
