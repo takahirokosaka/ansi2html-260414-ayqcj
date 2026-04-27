@@ -1,11 +1,11 @@
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Color {
 	Rgb(u8, u8, u8),
 	Ansi256(u8),
 	None,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 struct Style {
 	fg: Color,
 	bg: Color,
@@ -72,7 +72,7 @@ impl Converter {
 
 #[cfg(test)]
 mod tests {
-	use super::Converter;
+	use super::*;
 
 	// \033[0;38:2:1:30:144:255;1;3;4;48:2:127:0:127m
 	#[test]
@@ -102,5 +102,51 @@ mod tests {
 		]);
 
 		assert!(out.is_empty());
+	}
+
+	#[test]
+	fn style_equality_same_values() {
+		let s1 = Style {
+			fg: Color::Rgb(10, 20, 30),
+			bg: Color::Ansi256(42),
+			bold: true,
+			italic: false,
+			underline: true,
+			reverse: false,
+		};
+		let s2 = Style { ..s1 }; // copy fields (Style derives PartialEq + Copy for Color)
+		assert_eq!(s1, s2);
+		assert!(s1 == s2);
+	}
+
+	#[test]
+	fn style_equality_different_fg() {
+		let s1 = Style {
+			fg: Color::Rgb(10, 20, 30),
+			bg: Color::Ansi256(42),
+			bold: true,
+			italic: false,
+			underline: true,
+			reverse: false,
+		};
+		let mut s2 = s1;
+		s2.fg = Color::Rgb(1, 2, 3);
+		assert_ne!(s1, s2);
+		assert!(s1 != s2);
+	}
+
+	#[test]
+	fn style_equality_different_flags() {
+		let s1 = Style {
+			fg: Color::None,
+			bg: Color::None,
+			bold: false,
+			italic: false,
+			underline: false,
+			reverse: false,
+		};
+		let mut s2 = s1;
+		s2.bold = true;
+		assert_ne!(s1, s2);
 	}
 }
