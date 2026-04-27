@@ -68,6 +68,27 @@ impl Converter {
 
 		String::new()
 	}
+
+	fn flush_span_if_needed(&mut self, new_style: &Style) {
+		if !self.open_span {
+			// open a new span for non-default style
+			if *new_style != Style::default() {
+				println!("style changed to {:?}", new_style);
+				self.open_span = true;
+			}
+		} else {
+			// if style changed, close and open new if needed
+			if &self.cur_style != new_style {
+				println!("</span>");
+				self.open_span = false;
+				if *new_style != Style::default() {
+					println!("style changed to {:?}", new_style);
+					self.open_span = true;
+				}
+			}
+		}
+		self.cur_style = new_style.clone();
+	}
 }
 
 #[cfg(test)]
@@ -148,5 +169,116 @@ mod tests {
 		let mut s2 = s1;
 		s2.bold = true;
 		assert_ne!(s1, s2);
+	}
+
+	fn style(fg: Color, bg: Color, bold: bool) -> Style {
+		Style {
+			fg,
+			bg,
+			bold,
+			italic: false,
+			underline: false,
+			reverse: false,
+		}
+	}
+
+	#[test]
+	fn opens_span_when_current_closed_and_new_non_default() {
+		let mut conv = Converter {
+			cur_style: Style::default(),
+			open_span: false,
+		};
+
+		let new = style(Color::Rgb(1, 2, 3), Color::None, false);
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(
+			conv.open_span, true,
+			"should open when new style is non-default"
+		);
+		assert_eq!(conv.cur_style, new);
+	}
+
+	#[test]
+	fn stays_closed_when_current_closed_and_new_default() {
+		let mut conv = Converter {
+			cur_style: Style::default(),
+			open_span: false,
+		};
+
+		let new = Style::default();
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(
+			conv.open_span, false,
+			"should remain closed for default style"
+		);
+		assert_eq!(conv.cur_style, new);
+	}
+
+	#[test]
+	fn closes_and_opens_when_style_changes_between_non_default_styles() {
+		let mut conv = Converter {
+			cur_style: style(Color::Rgb(1, 1, 1), Color::None, false),
+			open_span: true,
+		};
+
+		let new = style(Color::Rgb(2, 2, 2), Color::None, false);
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(
+			conv.open_span, true,
+			"should reopen when changing between non-default styles"
+		);
+		assert_eq!(conv.cur_style, new);
+	}
+
+	#[test]
+	fn closes_when_changed_to_default() {
+		let mut conv = Converter {
+			cur_style: style(Color::Rgb(1, 1, 1), Color::None, false),
+			open_span: true,
+		};
+
+		let new = Style::default();
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(
+			conv.open_span, false,
+			"should close when changing to default style"
+		);
+		assert_eq!(conv.cur_style, new);
+	}
+
+	#[test]
+	fn stays_open_when_same_style() {
+		let existing = style(Color::Rgb(5, 6, 7), Color::None, true);
+		let mut conv = Converter {
+			cur_style: existing,
+			open_span: true,
+		};
+
+		let new = existing;
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(
+			conv.open_span, true,
+			"should remain open when style unchanged"
+		);
+		assert_eq!(conv.cur_style, new);
+	}
+
+	#[test]
+	fn stays_closed_when_same_default_style() {
+		let mut conv = Converter {
+			cur_style: Style::default(),
+			open_span: false,
+		};
+
+		let new = Style::default();
+		conv.flush_span_if_needed(&new);
+
+		assert_eq!(conv.open_span, false);
+		assert_eq!(conv.cur_style, new);
 	}
 }
