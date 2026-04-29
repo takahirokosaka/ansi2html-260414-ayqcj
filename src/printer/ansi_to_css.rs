@@ -45,28 +45,48 @@ impl Converter {
 		&mut self,
 		params: impl IntoIterator<Item = &'a [u16]>,
 	) -> String {
+		let mut accumulated = Style::default();
+
 		for p in params {
-			println!("param bytes: {:02x?}", p);
+			log::debug!("param bytes: {:02x?}", p);
 
 			match p {
 				[0x0000u16] => {
-					println!("reset 0x00 (0)");
+					log::debug!("reset 0x00 (0)");
 
 					// Reset: close the current span (if any), and open a new span with the default style if the current span is not already the default.
 					let new = Style::default();
 					self.flush_span_if_needed(&new);
 				}
-				[0x0001u16] => println!("bold 0x01 (1)"),
-				[0x0003u16] => println!("italic 0x03 (3)"),
-				[0x0004u16] => println!("underline 0x04 (4)"),
-				[0x0007u16] => println!("reverse 0x07 (7)"),
-				[0x0026u16, _rest @ ..] => println!("color 0x26 (38)"),
-				[0x0030u16, _rest @ ..] => println!("background 0x30 (48)"),
+				[0x0001u16] => {
+					log::debug!("bold 0x01 (1)");
+					accumulated.bold = true;
+				}
+				[0x0003u16] => {
+					log::debug!("italic 0x03 (3)");
+					accumulated.italic = true;
+				}
+				[0x0004u16] => {
+					log::debug!("underline 0x04 (4)");
+					accumulated.underline = true;
+				}
+				[0x0007u16] => {
+					log::debug!("reverse 0x07 (7)");
+					accumulated.reverse = true;
+				}
+				[0x0026u16, _rest @ ..] => {
+					println!("TODO: color 0x26 (38)");
+				}
+				[0x0030u16, _rest @ ..] => {
+					println!("TODO: background 0x30 (48)");
+				}
 				_ => {
 					println!("anything else");
 				}
 			}
 		}
+
+		self.flush_span_if_needed(&accumulated);
 
 		String::new()
 	}
