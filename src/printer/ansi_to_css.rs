@@ -42,7 +42,7 @@ impl Converter {
 	}
 
 	pub(super) fn sgr_params_to_css<'a>(
-		&self,
+		&mut self,
 		params: impl IntoIterator<Item = &'a [u16]>,
 	) -> String {
 		for p in params {
@@ -53,6 +53,8 @@ impl Converter {
 					println!("reset 0x00 (0)");
 
 					// Reset: close the current span (if any), and open a new span with the default style if the current span is not already the default.
+					let new = Style::default();
+					self.flush_span_if_needed(&new);
 				}
 				[0x0001u16] => println!("bold 0x01 (1)"),
 				[0x0003u16] => println!("italic 0x03 (3)"),
@@ -98,7 +100,7 @@ mod tests {
 	// \033[0;38:2:1:30:144:255;1;3;4;48:2:127:0:127m
 	#[test]
 	fn test_sgr_params_to_css_complex_sequence() {
-		let converter = Converter::new();
+		let mut converter = Converter::new();
 
 		let out = converter.sgr_params_to_css([
 			&[0x0000u16][..],
