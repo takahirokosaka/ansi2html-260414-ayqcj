@@ -74,8 +74,20 @@ impl Converter {
 					log::debug!("reverse 0x07 (7)");
 					accumulated.reverse = true;
 				}
-				[0x0026u16, _rest @ ..] => {
-					println!("TODO: color 0x26 (38)");
+				[0x0026u16, mode, rest @ ..] => {
+					println!("{:?}", p);
+
+					match mode {
+						2 => {
+							println!("truecolor");
+						}
+						5 => {
+							println!("ansi256color");
+						}
+						other => {
+							println!("unknown color mode {} rest: {:?}", other, rest);
+						}
+					}
 				}
 				[0x0030u16, _rest @ ..] => {
 					println!("TODO: background 0x30 (48)");
@@ -142,6 +154,25 @@ mod tests {
 			&[3u16],                                     // 3 (italic)
 			&[4u16],                                     // 4 (underline)
 			&[48u16, 2u16, 127u16, 0u16, 127u16], // 48:2:127:0:127 -> 48 (set background color), 2 (truecolor), R = 127, G = 0, B = 127
+		]);
+
+		assert!(out.is_empty());
+	}
+
+	#[test]
+	fn test_sgr_params_to_css_ansi256_sequence() {
+		let mut converter = Converter::new();
+
+		// sequence:
+		// 0 (reset)
+		// 38:5:196 -> set foreground to ansi256 index 196 (bright red)
+		// 1 -> bold
+		// 48:5:57  -> set background to ansi256 index 57 (an arbitrary color)
+		let out = converter.sgr_params_to_css([
+			&[0u16][..],
+			&[38u16, 5u16, 196u16][..],
+			&[1u16][..],
+			&[48u16, 5u16, 57u16][..],
 		]);
 
 		assert!(out.is_empty());
