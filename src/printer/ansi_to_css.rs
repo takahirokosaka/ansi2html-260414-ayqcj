@@ -83,6 +83,14 @@ impl Converter {
 						}
 						5 => {
 							println!("ansi256color");
+
+							// Extract the first element of "rest" safely
+							if let [index, ..] = rest {
+								accumulated.fg = Color::Ansi256(*index as u8);
+								log::debug!("foreground ansi256 index {}", index);
+							} else {
+								println!("ansi256color sequence missing index: {:?}", rest);
+							}
 						}
 						other => {
 							println!("unknown color mode {} rest: {:?}", other, rest);
