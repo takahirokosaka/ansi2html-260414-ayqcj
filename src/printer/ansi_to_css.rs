@@ -80,6 +80,18 @@ impl Converter {
 					match mode {
 						2 => {
 							println!("truecolor");
+
+							if rest.len() >= 4 {
+								let (r, g, b) = (rest[1] as u8, rest[2] as u8, rest[3] as u8);
+								accumulated.fg = Color::Rgb(r, g, b);
+							} else if rest.len() >= 3 {
+								let (r, g, b) = (rest[0] as u8, rest[1] as u8, rest[2] as u8);
+								accumulated.fg = Color::Rgb(r, g, b);
+							} else {
+								println!("truecolor sequence missing RGB values: {:?}", rest);
+								accumulated.fg = Color::None;
+							}
+							log::debug!("foreground truecolor {:?})", accumulated.fg);
 						}
 						5 => {
 							println!("ansi256color");
@@ -157,12 +169,14 @@ mod tests {
 
 		let out = converter.sgr_params_to_css([
 			&[0u16][..],                                 // 0
-			&[38u16, 2u16, 1u16, 30u16, 144u16, 255u16], // 38:2:1:30:144:255 -> 38 (set foreground), 2 (truecolor), 1 (? iTerm2 add this), 30 (R), 144 (G), 255 (B)
+			&[38u16, 2u16, 1u16, 30u16, 144u16, 255u16], // 38:2:1:30:144:255 -> 38 (set foreground), 2 (truecolor), 1 (? iTerm2 add this, see below), 30 (R), 144 (G), 255 (B)
 			&[1u16],                                     // 1 (bold)
 			&[3u16],                                     // 3 (italic)
 			&[4u16],                                     // 4 (underline)
 			&[48u16, 2u16, 127u16, 0u16, 127u16], // 48:2:127:0:127 -> 48 (set background color), 2 (truecolor), R = 127, G = 0, B = 127
 		]);
+
+		// The 1 in 38:2:1:30:144:255 is iTerm2's extended RGB syntax. It's an optional color space identifier (where 1 typically means sRGB, the standard). You can safely ignore it for most use cases, or handle it explicitly.
 
 		assert!(out.is_empty());
 	}
