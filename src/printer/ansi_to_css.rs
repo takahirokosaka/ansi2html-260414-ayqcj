@@ -109,8 +109,40 @@ impl Converter {
 						}
 					}
 				}
-				[0x0030u16, _rest @ ..] => {
-					println!("TODO: background 0x30 (48)");
+				[0x0030u16, mode, rest @ ..] => {
+					log::debug!("background 0x30 (48)");
+
+					match mode {
+						2 => {
+							// truecolor: either [extra, R, G, B] or [R, G, B]
+							if rest.len() >= 4 {
+								let (r, g, b) = (rest[1] as u8, rest[2] as u8, rest[3] as u8);
+								accumulated.bg = Color::Rgb(r, g, b);
+							} else if rest.len() >= 3 {
+								let (r, g, b) = (rest[0] as u8, rest[1] as u8, rest[2] as u8);
+								accumulated.bg = Color::Rgb(r, g, b);
+							} else {
+								log::warn!(
+									"background truecolor sequence missing RGB values: {:?}",
+									rest
+								);
+								accumulated.bg = Color::None;
+							}
+							log::debug!("background truecolor {:?})", accumulated.bg);
+						}
+						5 => {
+							// 256-color: expect single index as first element of rest
+							if let [index, ..] = rest {
+								accumulated.bg = Color::Ansi256(*index as u8);
+								log::debug!("background ansi256 index {}", index);
+							} else {
+								log::warn!("background ansi256 sequence missing index: {:?}", rest);
+							}
+						}
+						other => {
+							log::debug!("unknown background color mode {} rest: {:?}", other, rest);
+						}
+					}
 				}
 				_ => {
 					println!("anything else");
