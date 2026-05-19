@@ -1,3 +1,7 @@
+mod util;
+
+use self::util::style_to_css;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Color {
 	Rgb(u8, u8, u8),
@@ -160,6 +164,12 @@ impl Converter {
 			// open a new span for non-default style
 			if *new_style != Style::default() {
 				println!("style changed to {:?}", new_style);
+				if let Some(css) = style_to_css(new_style) {
+					println!("<span style=\"{}\">", css);
+				} else {
+					println!("<span>");
+				}
+
 				self.open_span = true;
 			}
 		} else {
@@ -169,6 +179,11 @@ impl Converter {
 				self.open_span = false;
 				if *new_style != Style::default() {
 					println!("style changed to {:?}", new_style);
+					if let Some(css) = style_to_css(new_style) {
+						println!("<span style=\"{}\">", css);
+					} else {
+						println!("<span>");
+					}
 					self.open_span = true;
 				}
 			}
@@ -230,6 +245,17 @@ mod tests {
 		]);
 
 		assert!(out.is_empty());
+
+		// fg: Ansi256(12) (bright blue)
+		let out = converter.sgr_params_to_css([
+			&[0u16][..],
+			&[38u16, 5u16, 12u16][..],
+			&[1u16][..],
+			&[48u16, 5u16, 57u16][..],
+		]);
+
+		assert!(out.is_empty());
+
 	}
 
 	#[test]
