@@ -17,7 +17,11 @@ impl Printer {
 
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
-		println!("print: {:?}", c);
+		if let Some(esc) = escape_html(c) {
+			println!("print: {:?}", esc);
+		} else {
+			println!("print: {:?}", c);
+		}
 	}
 
 	fn execute(&mut self, byte: u8) {
@@ -53,4 +57,15 @@ pub fn ansi_to_html(input: &[u8]) -> String {
 	}
 
 	String::new()
+}
+
+fn escape_html(c: char) -> Option<&'static str> {
+	match c {
+		'&' => Some("&amp;"),
+		'<' => Some("&lt;"),
+		'>' => Some("&gt;"),
+		'"' => Some("&quot;"),
+		'\'' => Some("&#39;"),
+		_ => None,
+	}
 }
