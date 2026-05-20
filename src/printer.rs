@@ -19,6 +19,7 @@ impl Printer {
 
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
+		log::debug!("{:?}", c);
 		if let Some(esc) = escape_html(c) {
 			self.output.push_str(esc);
 		} else {
@@ -28,6 +29,11 @@ impl Perform for Printer {
 
 	fn execute(&mut self, byte: u8) {
 		log::debug!("execute: 0x{:x}", byte);
+		match byte {
+			b'\n' => self.output.push_str("<br>"),
+			b'\r' => {}
+			_ => {}
+		}
 	}
 
 	fn csi_dispatch(
