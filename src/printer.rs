@@ -5,12 +5,14 @@ use vte::{Parser, Perform};
 
 struct Printer {
 	converter: Converter,
+	output: String,
 }
 
 impl Printer {
 	pub fn new() -> Self {
 		Self {
 			converter: Converter::new(),
+			output: String::new(),
 		}
 	}
 }
@@ -18,14 +20,14 @@ impl Printer {
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
 		if let Some(esc) = escape_html(c) {
-			println!("print: {:?}", esc);
+			self.output.push_str(esc);
 		} else {
-			println!("print: {:?}", c);
+			self.output.push(c);
 		}
 	}
 
 	fn execute(&mut self, byte: u8) {
-		println!("execute: 0x{:x}", byte);
+		log::debug!("execute: 0x{:x}", byte);
 	}
 
 	fn csi_dispatch(
@@ -35,16 +37,20 @@ impl Perform for Printer {
 		ignore: bool,
 		action: char,
 	) {
-		println!(
+		log::debug!(
 			"CSI: params={:?}, intermediates={:?}, ignore={}, action={:?}",
-			params, intermediates, ignore, action
+			params,
+			intermediates,
+			ignore,
+			action
 		);
 
 		if action != 'm' {
 			return;
 		}
 
-		self.converter.sgr_params_to_css(params.iter());
+		self.output
+			.push_str(&self.converter.sgr_params_to_css(params.iter()));
 	}
 }
 
@@ -56,7 +62,7 @@ pub fn ansi_to_html(input: &[u8]) -> String {
 		parser.advance(&mut printer, byte);
 	}
 
-	String::new()
+	printer.output
 }
 
 fn escape_html(c: char) -> Option<&'static str> {

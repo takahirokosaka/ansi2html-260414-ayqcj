@@ -35,6 +35,7 @@ impl Default for Style {
 pub(super) struct Converter {
 	cur_style: Style,
 	open_span: bool,
+	output: String,
 }
 
 impl Converter {
@@ -42,6 +43,7 @@ impl Converter {
 		Self {
 			cur_style: Style::default(),
 			open_span: false,
+			output: String::new(),
 		}
 	}
 
@@ -79,11 +81,11 @@ impl Converter {
 					accumulated.reverse = true;
 				}
 				[0x0026u16, mode, rest @ ..] => {
-					println!("{:?}", p);
+					log::debug!("{:?}", p);
 
 					match mode {
 						2 => {
-							println!("truecolor");
+							log::debug!("truecolor");
 
 							if rest.len() >= 4 {
 								let (r, g, b) = (rest[1] as u8, rest[2] as u8, rest[3] as u8);
@@ -92,24 +94,24 @@ impl Converter {
 								let (r, g, b) = (rest[0] as u8, rest[1] as u8, rest[2] as u8);
 								accumulated.fg = Color::Rgb(r, g, b);
 							} else {
-								println!("truecolor sequence missing RGB values: {:?}", rest);
+								log::warn!("truecolor sequence missing RGB values: {:?}", rest);
 								accumulated.fg = Color::None;
 							}
 							log::debug!("foreground truecolor {:?})", accumulated.fg);
 						}
 						5 => {
-							println!("ansi256color");
+							log::debug!("ansi256color");
 
 							// Extract the first element of "rest" safely
 							if let [index, ..] = rest {
 								accumulated.fg = Color::Ansi256(*index as u8);
 								log::debug!("foreground ansi256 index {}", index);
 							} else {
-								println!("ansi256color sequence missing index: {:?}", rest);
+								log::warn!("ansi256color sequence missing index: {:?}", rest);
 							}
 						}
 						other => {
-							println!("unknown color mode {} rest: {:?}", other, rest);
+							log::warn!("unknown color mode {} rest: {:?}", other, rest);
 						}
 					}
 				}
@@ -144,30 +146,30 @@ impl Converter {
 							}
 						}
 						other => {
-							log::debug!("unknown background color mode {} rest: {:?}", other, rest);
+							log::warn!("unknown background color mode {} rest: {:?}", other, rest);
 						}
 					}
 				}
 				_ => {
-					println!("anything else");
+					log::debug!("anything else");
 				}
 			}
 		}
 
 		self.flush_span_if_needed(&accumulated);
 
-		String::new()
+		std::mem::take(&mut self.output)
 	}
 
 	fn flush_span_if_needed(&mut self, new_style: &Style) {
 		if !self.open_span {
 			// open a new span for non-default style
 			if *new_style != Style::default() {
-				println!("style changed to {:?}", new_style);
+				log::debug!("style changed to {:?}", new_style);
 				if let Some(css) = style_to_css(new_style) {
-					println!("<span style=\"{}\">", css);
+					self.output.push_str(&format!("<span style=\"{}\">", css));
 				} else {
-					println!("<span>");
+					self.output.push_str("<span>");
 				}
 
 				self.open_span = true;
@@ -175,14 +177,14 @@ impl Converter {
 		} else {
 			// if style changed, close and open new if needed
 			if &self.cur_style != new_style {
-				println!("</span>");
+				self.output.push_str("</span>");
 				self.open_span = false;
 				if *new_style != Style::default() {
-					println!("style changed to {:?}", new_style);
+					log::debug!("style changed to {:?}", new_style);
 					if let Some(css) = style_to_css(new_style) {
-						println!("<span style=\"{}\">", css);
+						self.output.push_str(&format!("<span style=\"{}\">", css));
 					} else {
-						println!("<span>");
+						self.output.push_str("<span>");
 					}
 					self.open_span = true;
 				}
@@ -212,7 +214,12 @@ mod tests {
 			&[0x0030u16, 0x0002u16, 0x007fu16, 0x0000u16, 0x007fu16],
 		]);
 
-		assert!(out.is_empty());
+		assert_eq!(
+			out,
+			"<span style=\"color: rgb(30,144,255); background-color: rgb(127,0,127); font-weight: 700; font-style: italic; text-decoration: underline;\">"
+		);
+
+		let mut converter = Converter::new();
 
 		let out = converter.sgr_params_to_css([
 			&[0u16][..],                                 // 0
@@ -225,7 +232,10 @@ mod tests {
 
 		// The 1 in 38:2:1:30:144:255 is iTerm2's extended RGB syntax. It's an optional color space identifier (where 1 typically means sRGB, the standard). You can safely ignore it for most use cases, or handle it explicitly.
 
-		assert!(out.is_empty());
+		assert_eq!(
+			out,
+			"<span style=\"color: rgb(30,144,255); background-color: rgb(127,0,127); font-weight: 700; font-style: italic; text-decoration: underline;\">"
+		);
 	}
 
 	#[test]
@@ -244,9 +254,14 @@ mod tests {
 			&[48u16, 5u16, 57u16][..],
 		]);
 
-		assert!(out.is_empty());
+		assert_eq!(
+			out,
+			"<span style=\"color: rgb(255,0,0); background-color: rgb(95,0,255); font-weight: 700;\">"
+		);
 
-		// fg: Ansi256(12) (bright blue)
+		let mut converter = Converter::new();
+
+		// fg: Ansi256(12) (bright blue, but not actually bright blue in Dracula)
 		let out = converter.sgr_params_to_css([
 			&[0u16][..],
 			&[38u16, 5u16, 12u16][..],
@@ -254,8 +269,7 @@ mod tests {
 			&[48u16, 5u16, 57u16][..],
 		]);
 
-		assert!(out.is_empty());
-
+		assert_eq!(out, "<span style=\"color: rgb(202,169,255); background-color: rgb(95,0,255); font-weight: 700;\">");
 	}
 
 	#[test]
@@ -317,10 +331,7 @@ mod tests {
 
 	#[test]
 	fn opens_span_when_current_closed_and_new_non_default() {
-		let mut conv = Converter {
-			cur_style: Style::default(),
-			open_span: false,
-		};
+		let mut conv = Converter::new();
 
 		let new = style(Color::Rgb(1, 2, 3), Color::None, false);
 		conv.flush_span_if_needed(&new);
@@ -334,10 +345,7 @@ mod tests {
 
 	#[test]
 	fn stays_closed_when_current_closed_and_new_default() {
-		let mut conv = Converter {
-			cur_style: Style::default(),
-			open_span: false,
-		};
+		let mut conv = Converter::new();
 
 		let new = Style::default();
 		conv.flush_span_if_needed(&new);
@@ -354,6 +362,7 @@ mod tests {
 		let mut conv = Converter {
 			cur_style: style(Color::Rgb(1, 1, 1), Color::None, false),
 			open_span: true,
+			output: String::new(),
 		};
 
 		let new = style(Color::Rgb(2, 2, 2), Color::None, false);
@@ -371,6 +380,7 @@ mod tests {
 		let mut conv = Converter {
 			cur_style: style(Color::Rgb(1, 1, 1), Color::None, false),
 			open_span: true,
+			output: String::new(),
 		};
 
 		let new = Style::default();
@@ -389,6 +399,7 @@ mod tests {
 		let mut conv = Converter {
 			cur_style: existing,
 			open_span: true,
+			output: String::new(),
 		};
 
 		let new = existing;
@@ -403,10 +414,7 @@ mod tests {
 
 	#[test]
 	fn stays_closed_when_same_default_style() {
-		let mut conv = Converter {
-			cur_style: Style::default(),
-			open_span: false,
-		};
+		let mut conv = Converter::new();
 
 		let new = Style::default();
 		conv.flush_span_if_needed(&new);
