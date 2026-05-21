@@ -190,7 +190,7 @@ impl Converter {
 				}
 			}
 		}
-		self.cur_style = new_style.clone();
+		self.cur_style = *new_style;
 	}
 }
 
