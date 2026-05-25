@@ -150,6 +150,19 @@ impl Converter {
 						}
 					}
 				}
+				[n] if (90..=97).contains(n) => {
+					// 90–97 Set bright foreground color
+					// Not standard but iTerm2 output these
+					log::debug!("bright foreground {}", n);
+					let bright_idx = (8 + (*n - 90)) as u8; // 8..=15
+					accumulated.fg = Color::Ansi256(bright_idx);
+				}
+				[n] if (100..=107).contains(n) => {
+					// 100–107 Set bright background color
+					log::debug!("bright background {}", n);
+					let bright_idx = (8 + (*n - 100)) as u8; // 8..=15
+					accumulated.bg = Color::Ansi256(bright_idx);
+				}
 				_ => {
 					log::debug!("anything else");
 				}
@@ -269,7 +282,10 @@ mod tests {
 			&[48u16, 5u16, 57u16][..],
 		]);
 
-		assert_eq!(out, "<span style=\"color: rgb(202,169,255); background-color: rgb(95,0,255); font-weight: 700;\">");
+		assert_eq!(
+			out,
+			"<span style=\"color: rgb(202,169,255); background-color: rgb(95,0,255); font-weight: 700;\">"
+		);
 	}
 
 	#[test]
