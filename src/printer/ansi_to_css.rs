@@ -163,6 +163,16 @@ impl Converter {
 					let bright_idx = (8 + (*n - 100)) as u8; // 8..=15
 					accumulated.bg = Color::Ansi256(bright_idx);
 				}
+				[n] if (30..=37).contains(n) => {
+					// foreground ANSI 8-color
+					let idx = (n - 30) as u8; // 32 -> 2
+					accumulated.fg = Color::Ansi256(idx);
+				}
+				[n] if (40..=47).contains(n) => {
+					// background ANSI 8-color
+					let idx = (n - 40) as u8; // 42 -> 2
+					accumulated.bg = Color::Ansi256(idx);
+				}
 				_ => {
 					log::debug!("anything else");
 				}
@@ -286,6 +296,18 @@ mod tests {
 			out,
 			"<span style=\"color: rgb(202,169,255); background-color: rgb(95,0,255); font-weight: 700;\">"
 		);
+	}
+
+	#[test]
+	fn test_sgr_params_to_css_foreground_ansi_32() {
+		let mut converter = Converter::new();
+
+		let out = converter.sgr_params_to_css([
+			&[0x0000u16][..], // reset
+			&[0x0020u16],     // 32 -> foreground index 2 (green)
+		]);
+
+		assert_eq!(out, "<span style=\"color: rgb(80,250,123);\">");
 	}
 
 	#[test]
