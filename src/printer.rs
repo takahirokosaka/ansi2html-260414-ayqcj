@@ -32,7 +32,8 @@ impl Perform for Printer {
 		match byte {
 			// b'\n' => self.output.push_str("<br>"),
 			b'\n' => self.output.push_str("\n"),
-			b'\r' => {}
+			b'\r' => {},
+			b'\t' => self.output.push_str("&#9;"),
 			_ => {}
 		}
 	}
