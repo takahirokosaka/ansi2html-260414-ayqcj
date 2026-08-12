@@ -30,7 +30,8 @@ impl Perform for Printer {
 	fn execute(&mut self, byte: u8) {
 		log::debug!("execute: 0x{:x}", byte);
 		match byte {
-			b'\n' => self.output.push_str("<br>"),
+			// b'\n' => self.output.push_str("<br>"),
+			b'\n' => self.output.push_str("\n"),
 			b'\r' => {}
 			_ => {}
 		}
