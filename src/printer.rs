@@ -19,7 +19,7 @@ impl Printer {
 
 impl Perform for Printer {
 	fn print(&mut self, c: char) {
-		log::debug!("{:?}", c);
+		log::debug!("char={:?}, codepoint=U+{:04X}", c, c as u32);
 		if let Some(esc) = escape_html(c) {
 			self.output.push_str(esc);
 		} else {
@@ -68,6 +68,9 @@ pub fn ansi_to_html(input: &[u8]) -> String {
 	for &byte in input {
 		parser.advance(&mut printer, byte);
 	}
+
+	log::debug!("output = {:?}", printer.output);
+	log::debug!("output bytes = {:02X?}", printer.output.as_bytes());
 
 	printer.output
 }
