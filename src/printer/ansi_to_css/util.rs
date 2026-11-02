@@ -1,68 +1,5 @@
 use crate::printer::ansi_to_css::{Color, Style};
 
-pub fn style_to_css(s: &Style) -> Option<String> {
-	let mut props = Vec::new();
-
-	// foreground
-	match s.fg {
-		Color::Rgb(r, g, b) => props.push(format!("color: rgb({},{},{});", r, g, b)),
-		Color::Ansi256(idx) => {
-			// convert 256-color index to rgb (simple algorithm)
-			let rgb = ansi256_to_rgb(idx);
-			props.push(format!("color: rgb({},{},{});", rgb.0, rgb.1, rgb.2));
-		}
-		Color::None => {}
-	}
-
-	// background
-	match s.bg {
-		Color::Rgb(r, g, b) => props.push(format!("background-color: rgb({},{},{});", r, g, b)),
-		Color::Ansi256(idx) => {
-			let rgb = ansi256_to_rgb(idx);
-			props.push(format!(
-				"background-color: rgb({},{},{});",
-				rgb.0, rgb.1, rgb.2
-			));
-		}
-		Color::None => {}
-	}
-
-	// attributes
-	if s.bold {
-		// bold -> font-weight heavier
-		props.push("font-weight: 700;".into());
-	}
-	if s.italic {
-		props.push("font-style: italic;".into());
-	}
-	if s.underline {
-		props.push("text-decoration: underline;".into());
-	}
-	if s.reverse {
-		// reverse: swap fg/bg when both present; otherwise use invert filter
-		match (s.fg, s.bg) {
-			(Color::None, Color::None) => {
-				props.push("filter: invert(100%);".into());
-			}
-			(fg, bg) => {
-				// compute css variables and swap
-				if let Some(fg_css) = color_to_css_value(fg) {
-					props.push(format!("background-color: {};", fg_css));
-				}
-				if let Some(bg_css) = color_to_css_value(bg) {
-					props.push(format!("color: {};", bg_css));
-				}
-			}
-		}
-	}
-
-	if props.is_empty() {
-		None
-	} else {
-		Some(props.join(" "))
-	}
-}
-
 // helper: produce "rgb(r,g,b)" string or hex string
 fn color_to_css_value(c: Color) -> Option<String> {
 	match c {
@@ -123,5 +60,96 @@ fn ansi256_to_rgb(idx: u8) -> (u8, u8, u8) {
 		// grayscale 232..255
 		let gray = 8 + (i - 232) * 10;
 		(gray as u8, gray as u8, gray as u8)
+	}
+}
+
+pub fn style_to_css(s: &Style) -> Option<String> {
+	let mut props = Vec::new();
+
+	// foreground
+	match s.fg {
+		Color::Rgb(r, g, b) => {
+			props.push(format!("color: rgb({},{},{});", r, g, b));
+		}
+		Color::Ansi256(idx) => {
+			props.push(format!("color: {};", ansi256_to_css_value(idx)));
+		}
+		Color::None => {}
+	}
+
+	// background
+	match s.bg {
+		Color::Rgb(r, g, b) => {
+			props.push(format!("background-color: rgb({},{},{});", r, g, b));
+		}
+		Color::Ansi256(idx) => {
+			props.push(format!("background-color: {};", ansi256_to_css_value(idx)));
+		}
+		Color::None => {}
+	}
+
+	// attributes
+	if s.bold {
+		props.push("font-weight: 700;".into());
+	}
+
+	if s.italic {
+		props.push("font-style: italic;".into());
+	}
+
+	if s.underline {
+		props.push("text-decoration: underline;".into());
+	}
+
+	if s.reverse {
+		match (s.fg, s.bg) {
+			(Color::None, Color::None) => {
+				props.push("filter: invert(100%);".into());
+			}
+			(fg, bg) => {
+				if let Some(fg_css) = color_to_css_value(fg) {
+					props.push(format!("background-color: {};", fg_css));
+				}
+				if let Some(bg_css) = color_to_css_value(bg) {
+					props.push(format!("color: {};", bg_css));
+				}
+			}
+		}
+	}
+
+	if props.is_empty() {
+		None
+	} else {
+		Some(props.join(" "))
+	}
+}
+
+// Convert ANSI colors to CSS values.
+// Standard 16 colors use CSS variables; extended colors use RGB.
+fn ansi256_to_css_value(idx: u8) -> String {
+	const ANSI16: [&str; 16] = [
+		"--ansi-black",
+		"--ansi-red",
+		"--ansi-green",
+		"--ansi-yellow",
+		"--ansi-blue",
+		"--ansi-magenta",
+		"--ansi-cyan",
+		"--ansi-white",
+		"--ansi-bright-black",
+		"--ansi-bright-red",
+		"--ansi-bright-green",
+		"--ansi-bright-yellow",
+		"--ansi-bright-blue",
+		"--ansi-bright-magenta",
+		"--ansi-bright-cyan",
+		"--ansi-bright-white",
+	];
+
+	if let Some(variable) = ANSI16.get(idx as usize) {
+		format!("var({})", variable)
+	} else {
+		let (r, g, b) = ansi256_to_rgb(idx);
+		format!("rgb({},{},{})", r, g, b)
 	}
 }
