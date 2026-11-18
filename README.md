@@ -1,6 +1,6 @@
 # ansi2html
 
-Yet another ANSI to HTML converter.
+Yet another ANSI to HTML converter
 
 `ansi2html` converts ANSI escape sequences in terminal output into HTML, preserving text formatting and colors.
 
