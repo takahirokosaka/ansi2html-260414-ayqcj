@@ -3,7 +3,7 @@ use crate::printer::ansi_to_css::{Color, Style};
 // helper: produce "rgb(r,g,b)" string or hex string
 fn color_to_css_value(c: Color) -> Option<String> {
 	match c {
-		Color::Rgb(r, g, b) => Some(format!("rgb({},{},{})", r, g, b)),
+		Color::Rgb(r, g, b) => Some(rgb_to_hex(r, g, b)),
 		Color::Ansi256(idx) => Some(ansi256_to_css_value(idx)),
 		Color::None => None,
 	}
@@ -32,10 +32,10 @@ pub fn style_to_css(s: &Style) -> Option<String> {
 	// foreground
 	match s.fg {
 		Color::Rgb(r, g, b) => {
-			props.push(format!("color: rgb({},{},{});", r, g, b));
+			props.push(format!("color:{};", rgb_to_hex(r, g, b)));
 		}
 		Color::Ansi256(idx) => {
-			props.push(format!("color: {};", ansi256_to_css_value(idx)));
+			props.push(format!("color:{};", ansi256_to_css_value(idx)));
 		}
 		Color::None => {}
 	}
@@ -43,38 +43,38 @@ pub fn style_to_css(s: &Style) -> Option<String> {
 	// background
 	match s.bg {
 		Color::Rgb(r, g, b) => {
-			props.push(format!("background-color: rgb({},{},{});", r, g, b));
+			props.push(format!("background-color:{};", rgb_to_hex(r, g, b)));
 		}
 		Color::Ansi256(idx) => {
-			props.push(format!("background-color: {};", ansi256_to_css_value(idx)));
+			props.push(format!("background-color:{};", ansi256_to_css_value(idx)));
 		}
 		Color::None => {}
 	}
 
 	// attributes
 	if s.bold {
-		props.push("font-weight: 700;".into());
+		props.push("font-weight:700;".into());
 	}
 
 	if s.italic {
-		props.push("font-style: italic;".into());
+		props.push("font-style:italic;".into());
 	}
 
 	if s.underline {
-		props.push("text-decoration: underline;".into());
+		props.push("text-decoration:underline;".into());
 	}
 
 	if s.reverse {
 		match (s.fg, s.bg) {
 			(Color::None, Color::None) => {
-				props.push("filter: invert(100%);".into());
+				props.push("filter:invert(100%);".into());
 			}
 			(fg, bg) => {
 				if let Some(fg_css) = color_to_css_value(fg) {
-					props.push(format!("background-color: {};", fg_css));
+					props.push(format!("background-color:{};", fg_css));
 				}
 				if let Some(bg_css) = color_to_css_value(bg) {
-					props.push(format!("color: {};", bg_css));
+					props.push(format!("color:{};", bg_css));
 				}
 			}
 		}
@@ -85,6 +85,10 @@ pub fn style_to_css(s: &Style) -> Option<String> {
 	} else {
 		Some(props.join(" "))
 	}
+}
+
+fn rgb_to_hex(r: u8, g: u8, b: u8) -> String {
+	format!("#{:02x}{:02x}{:02x}", r, g, b)
 }
 
 // Convert ANSI colors to CSS values.
@@ -113,6 +117,6 @@ fn ansi256_to_css_value(idx: u8) -> String {
 		format!("var({})", variable)
 	} else {
 		let (r, g, b) = ansi256_to_rgb(idx);
-		format!("rgb({},{},{})", r, g, b)
+		rgb_to_hex(r, g, b)
 	}
 }
