@@ -194,7 +194,7 @@ This script:
 2. Waits briefly for the clipboard to be populated.
 3. Runs `a2h` to convert the clipboard contents into HTML.
 
-The delay is heuristic. If it didn’t work, please press Command-Shift-C again.
+The delay is heuristic. If it didn’t work, please press **Command+Shift+C** again.
 
 ### 4\. Configure a keyboard shortcut
 
@@ -210,17 +210,17 @@ You can now select styled terminal output and press **Shift+Command+C** to cop
 
 ### 5\. Paste into HTML/Markdown
 
-Open your HTML/Markdown editor, type `<pre class="terminal"><code></code></pre>`, and paste with **Command + V**.
+Open your HTML/Markdown editor, type `<pre><code></code></pre>`, and paste with **Command + V**.
 
 The terminal output should retain its colors and text formatting.
 
 **Note:** macOS may request accessibility permissions for iTerm2 to control its menu through System Events. Grant the necessary permission in System Settings → Privacy & Security → Automation.
 
-Typing `<pre class="terminal"><code></code></pre>` repeatedly is cumborsome. Use [espanso](https://espanso.org) with the following replacement rule:
+Typing `<pre><code></code></pre>` repeatedly is cumbersome. Use [espanso](https://espanso.org) with the following replacement rule:
 
 ```text
-\- trigger: ":tm"
-  replace: '<pre class="terminal"><code>$|$</code></pre>'
+- trigger: ":tm"
+  replace: '<pre><code>$|$</code></pre>'
 ```
 
 ## Supported ANSI Features
