@@ -4,10 +4,7 @@ use crate::printer::ansi_to_css::{Color, Style};
 fn color_to_css_value(c: Color) -> Option<String> {
 	match c {
 		Color::Rgb(r, g, b) => Some(format!("rgb({},{},{})", r, g, b)),
-		Color::Ansi256(idx) => {
-			let (r, g, b) = ansi256_to_rgb(idx);
-			Some(format!("rgb({},{},{})", r, g, b))
-		}
+		Color::Ansi256(idx) => Some(ansi256_to_css_value(idx)),
 		Color::None => None,
 	}
 }
@@ -15,41 +12,7 @@ fn color_to_css_value(c: Color) -> Option<String> {
 // convert 256-color palette index to (r,g,b)
 fn ansi256_to_rgb(idx: u8) -> (u8, u8, u8) {
 	let i = idx as u16;
-	if i < 16 {
-		//   // standard 16 colors — map to reasonable defaults
-		//   let table: [(u8,u8,u8);16] = [
-		//       (0,0,0), (128,0,0), (0,128,0), (128,128,0),
-		//       (0,0,128), (128,0,128), (0,128,128), (192,192,192),
-		//       (128,128,128), (255,0,0), (0,255,0), (255,255,0),
-		//       (0,0,255), (255,0,255), (0,255,255), (255,255,255),
-		//   ];
-		//   return table[i as usize];
-
-		// Dracula palette mapping (normal, bright)
-		// TODO: Read from a config file
-		let dracula = [
-			("#000000", "#21222c"), // black
-			("#ff5555", "#ff6e6e"), // red
-			("#50fa7b", "#69ff94"), // green
-			("#f1fa8c", "#ffffa5"), // yellow
-			("#bd93f9", "#caa9ff"), // blue (violet)
-			("#ff79c6", "#ff92d0"), // magenta (pink)
-			("#8be9fd", "#9bf0ff"), // cyan
-			("#bbbbbb", "#ffffff"), // white
-		];
-		let base = (i % 8) as usize;
-		let bright = i >= 8;
-		let hex = if bright {
-			dracula[base].1
-		} else {
-			dracula[base].0
-		};
-
-		let r = u8::from_str_radix(&hex[1..3], 16).unwrap_or(0);
-		let g = u8::from_str_radix(&hex[3..5], 16).unwrap_or(0);
-		let b = u8::from_str_radix(&hex[5..7], 16).unwrap_or(0);
-		(r, g, b)
-	} else if i >= 16 && i <= 231 {
+	if i <= 231 {
 		let ci = i - 16;
 		let r = (ci / 36) % 6;
 		let g = (ci / 6) % 6;
