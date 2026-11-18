@@ -120,3 +120,33 @@ fn ansi256_to_css_value(idx: u8) -> String {
 		rgb_to_hex(r, g, b)
 	}
 }
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn rgb_to_hex_conversion() {
+		assert_eq!(rgb_to_hex(255, 0, 0), "#ff0000");
+		assert_eq!(rgb_to_hex(80, 250, 123), "#50fa7b");
+		assert_eq!(rgb_to_hex(0, 0, 0), "#000000");
+		assert_eq!(rgb_to_hex(255, 255, 255), "#ffffff");
+	}
+
+	#[test]
+	fn ansi256_to_hex_conversion() {
+		assert_eq!(ansi256_to_css_value(16), "#000000");
+		assert_eq!(ansi256_to_css_value(196), "#ff0000");
+		assert_eq!(ansi256_to_css_value(231), "#ffffff");
+		assert_eq!(ansi256_to_css_value(232), "#080808");
+		assert_eq!(ansi256_to_css_value(255), "#eeeeee");
+	}
+
+	#[test]
+	fn ansi16_uses_css_variables() {
+		assert_eq!(ansi256_to_css_value(0), "var(--ansi-black)");
+		assert_eq!(ansi256_to_css_value(7), "var(--ansi-white)");
+		assert_eq!(ansi256_to_css_value(8), "var(--ansi-bright-black)");
+		assert_eq!(ansi256_to_css_value(15), "var(--ansi-bright-white)");
+	}
+}
