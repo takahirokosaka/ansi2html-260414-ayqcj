@@ -1,0 +1,10 @@
+#!/usr/bin/env zsh
+
+# Handles clipboard integration and application-specific rendering workarounds
+
+# "do shell script" runs the command in a different shell environment from your interactive zsh. Apple documents that do shell script runs via /bin/sh and does not load your interactive shell configuration; its environment can therefore differ from your terminal. See AppleScript Language Guide.
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
+# Convert empty lines with &nbsp; (because Typora ends rendering of <pre> at an empty line), then remove trailing spaces.
+pbpaste | ~/.local/bin/ansi2html | sed -e 's/^[[:space:]]*$/\&nbsp;/' | sed 's/[[:blank:]]*$//' | pbcopy
