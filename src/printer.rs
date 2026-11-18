@@ -32,7 +32,7 @@ impl Perform for Printer {
 		match byte {
 			// b'\n' => self.output.push_str("<br>"),
 			b'\n' => self.output.push_str("\n"),
-			b'\r' => {},
+			b'\r' => {}
 			b'\t' => self.output.push_str("&#9;"),
 			_ => {}
 		}
@@ -66,9 +66,7 @@ pub fn ansi_to_html(input: &[u8]) -> String {
 	let mut parser = Parser::new();
 	let mut printer = Printer::new();
 
-	for &byte in input {
-		parser.advance(&mut printer, byte);
-	}
+	parser.advance(&mut printer, input);
 
 	log::debug!("output = {:?}", printer.output);
 	log::debug!("output bytes = {:02X?}", printer.output.as_bytes());
