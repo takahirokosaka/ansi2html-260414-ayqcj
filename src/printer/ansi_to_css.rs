@@ -239,7 +239,7 @@ mod tests {
 
 		assert_eq!(
 			out,
-			"<span style=\"color: rgb(30,144,255); background-color: rgb(127,0,127); font-weight: 700; font-style: italic; text-decoration: underline;\">"
+			"<span style=\"color:#1e90ff; background-color:#7f007f; font-weight:700; font-style:italic; text-decoration:underline;\">"
 		);
 
 		let mut converter = Converter::new();
@@ -257,7 +257,7 @@ mod tests {
 
 		assert_eq!(
 			out,
-			"<span style=\"color: rgb(30,144,255); background-color: rgb(127,0,127); font-weight: 700; font-style: italic; text-decoration: underline;\">"
+			"<span style=\"color:#1e90ff; background-color:#7f007f; font-weight:700; font-style:italic; text-decoration:underline;\">"
 		);
 	}
 
@@ -279,7 +279,7 @@ mod tests {
 
 		assert_eq!(
 			out,
-			"<span style=\"color: rgb(255,0,0); background-color: rgb(95,0,255); font-weight: 700;\">"
+			"<span style=\"color:#ff0000; background-color:#5f00ff; font-weight:700;\">"
 		);
 
 		let mut converter = Converter::new();
@@ -294,7 +294,7 @@ mod tests {
 
 		assert_eq!(
 			out,
-			"<span style=\"color: rgb(202,169,255); background-color: rgb(95,0,255); font-weight: 700;\">"
+			"<span style=\"color:var(--ansi-bright-blue); background-color:#5f00ff; font-weight:700;\">"
 		);
 	}
 
@@ -307,7 +307,7 @@ mod tests {
 			&[0x0020u16],     // 32 -> foreground index 2 (green)
 		]);
 
-		assert_eq!(out, "<span style=\"color: rgb(80,250,123);\">");
+		assert_eq!(out, "<span style=\"color:var(--ansi-green);\">");
 	}
 
 	#[test]
@@ -460,4 +460,5 @@ mod tests {
 		assert_eq!(conv.open_span, false);
 		assert_eq!(conv.cur_style, new);
 	}
+
 }
