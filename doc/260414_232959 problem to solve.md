@@ -16,11 +16,11 @@ using Edit> **Copy with Control Sequences**. The output of the third command sho
 
 If we directly pass the output of `bat` to python ansi2html, it outputs correctly:
 
-<pre style="-typora-class: dracula;"><span style="color: #7C7865">#</span><span style="color: #7C7865">!/usr/bin/env sh</span></pre>
+<pre class="terminal"><code><span style="color: #7C7865">#</span><span style="color: #7C7865">!/usr/bin/env sh</span><code></pre>
 
 But if we “Copy with Control Sequences” and pass the clipboard content to python ansi2html, it outputs incorrectly:
 
-<pre style="-typora-class: dracula;"><span style="color: #017C78; background-color: #FF6E67">#!/usr/bin/env sh</span></pre>
+<pre class="terminal"><code><span style="color: #017C78; background-color: #FF6E67">#!/usr/bin/env sh</span></code></pre>
 
 ## ChatGPT summarizes:
 
