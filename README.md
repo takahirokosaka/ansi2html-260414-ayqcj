@@ -4,14 +4,11 @@ Yet another ANSI to HTML converter
 
 `ansi2html` converts ANSI escape sequences in terminal output into HTML, preserving text formatting and colors.
 
-It is designed primarily as a supplement for iTerm2, handling some of its idiosyncratic ANSI escape sequence behavior that may not be handled correctly by existing ANSI-to-HTML converters.
-
-
-## Goals
-
-Existing ANSI-to-HTML converters provide useful functionality, but terminal output can contain variations in escape sequences depending on the commands and the terminal emulator we use. For example, the following command outputs colors not found in the ANSI pallet:
+It is designed primarily as a supplement for iTerm2, handling some of its ANSI escape sequence behavior that may not be handled correctly by existing ANSI-to-HTML converters. `ansi2html` makes it easy to copy the following text, for example, and paste it into HTML with colors and styling.
 
 ![color.png](<./color.png>)
+
+## Goals
 
 This project aims to:
 
