@@ -6,7 +6,18 @@ Yet another ANSI to HTML converter
 
 It is designed primarily as a supplement for iTerm2, handling some of its ANSI escape sequence behavior that may not be handled correctly by existing ANSI-to-HTML converters. `ansi2html` makes it easy to copy the following text, for example, and paste it into HTML with colors and styling.
 
+Input:
+
 ![color.png](<./color.png>)
+Output:
+
+```html
+Last login: Fri Nov 20 02:08:40 on ttys000
+<span style="color:var(--ansi-bright-magenta);">~</span><span style="color:var(--ansi-bright-blue);"> %</span> <span style="color:var(--ansi-green);">echo</span> hello | <span style="color:var(--ansi-green);">figlet</span> | <span style="color:var(--ansi-green);">lolcat</span> -f
+<span style="color:#3bfe45;"> </span><span style="color:#3ffe41;">_</span><span style="color:#43fe3d;"> </span><span style="color:#46fe3a;"> </span><span style="color:#4afe36;"> ...
+
+<span style="color:#ffffff; background-color:#146496; font-weight:700; font-style:italic; text-decoration:underline;"> Styled RGB Text </span> ...
+```
 
 ## Goals
 
@@ -94,7 +105,7 @@ Define the variables in your HTML:
 }
 ```
 
-You can customize these values to match your iTerm2 color scheme.
+You can customize these values to match your iTerm2 color scheme. You can also define different colors for printing using the `@media print` directive.
 
 ## Command-Line Usage
 
